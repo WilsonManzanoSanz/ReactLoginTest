@@ -3,11 +3,13 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import TextField from '@material-ui/core/TextField';
 import {authService} from '../../../services/auth'
+import PropTypes from 'prop-types';
+
 
 class LoginCard extends Component {
   constructor(props){
     super(props);
-    this.state = {email: '', password:'', error:{email: false, password:false}};
+    this.state = {email: '', password:'', error:{email: false, password:false}, errorMessage: ''};
     this.handleChange = this.handleChange.bind(this);
     this.submitLogin = this.submitLogin.bind(this);
   }
@@ -49,22 +51,33 @@ class LoginCard extends Component {
       }
     }
     if(validForm){
-      authService.attemptLogin().then(response => console.log(response)).catch(error => console.error(error));
+      authService.attemptLogin(this.state.email, this.state.password).then(
+        response => {
+          authService.saveUser(response.user);
+          this.props.history.push('/locations');
+        })
+        .catch(error => this.setState({errorMessage:error.message}));
     }
   }
   
   render() {
     return (
-        <Card >
-          <h1 className="main-tittle" id="main-tittle">Login</h1>
-          <form onSubmit={this.submitLogin} noValidate autoComplete="off">
+        <Card>
+            <h1 className="main-tittle center" id="main-tittle">Login</h1>
+            <form className="center-block padding20" onSubmit={this.submitLogin} noValidate autoComplete="off">
             <TextField className="full-width" type="text" name="email" value={this.state.email} label="Email" id="login-input-email" onChange={this.handleChange} error={this.state.error.email} required/>
-            <TextField  className="full-width" type="password" name="password" value={this.state.password}  label="Passsword" id="login-input-password" onChange={this.handleChange} error={this.state.error.password} required/>
-            <Button type="submit" className="center-button" variant="contained" color="primary" style={{margin:'20px'}}>LOGIN</Button>
-          </form>
+              <TextField  className="full-width" type="password" name="password" value={this.state.password}  label="Passsword" id="login-input-password" onChange={this.handleChange} error={this.state.error.password} required/>
+              <p className="red">{this.state.errorMessage}</p>
+              <Button type="submit" className="center-block" variant="contained" color="primary">LOGIN</Button>
+            </form>
         </Card >
     );
   }
 }
+
+LoginCard.propTypes = {
+  history: PropTypes.object
+};
+
 
 export default LoginCard;
